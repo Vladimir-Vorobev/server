@@ -91,25 +91,53 @@ const WebSocket = require('ws')
 const server = new WebSocket.Server({ port: 3000 })
 let rooms = {}
 server.on('connection', function connection(ws, req){ // websocket
-    //clients[req.socket.remoteAddress] = {client: ws} // req.socket.remoteAddress заменить на никнайм
     ws.on('message', function incoming(dataClient) {
-        // в message присылать массив [ник, комната, сообщение]
         let data = JSON.parse(dataClient)
         if(data.newroom != undefined){
-            rooms[data.newroom] = {}
+            rooms[data.newroom] = {messages123456789: []}
         }
-        if(data.newuser != undefined){
-            let room = rooms[data.room]
-            room[data.newuser] =  ws
-        }
-        if(data.message != undefined){
-            for(key in rooms[data.room]){
+        else if(data.newuser != undefined){
+            try{
                 let room = rooms[data.room]
-                room[key].send(data.message)
+                room[data.newuser] =  ws
+                for(item in room.messages123456789){
+                    room[data.newuser].send(room.messages123456789[item].user + ': ' + room.messages123456789[item].message)
+                }
+            }catch(err){
+                console.log(err)
+            }
+        }
+        else if(data.message != undefined){
+            try{
+                let room = rooms[data.room]
+                room.messages123456789.push({user: data.user, message: data.message})
+                for(key in room){
+                    if(key != 'messages123456789'){
+                        room[key].send(data.user + ': ' + data.message)
+                    }
+                }
+            }catch(err){
+                console.log(err)
+            }
+        }
+        else if(data.deluser != undefined){
+            let room = rooms[data.room]
+            delete room[data.deluser]
+        }
+        else if(data.delroom != undefined){
+            delete rooms[data.delroom]
+        }
+        else if(data.reconnect != undefined){
+            for(key in rooms){
+                let room = rooms[key]
+                for(keys in room){
+                    if(keys == data.reconnect){
+                        room[keys] = ws
+                    }
+                }
             }
         }
     })
-    ws.send('Добро пожаловать!')
 })
 
 app.listen(3030, function(){
