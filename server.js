@@ -1,9 +1,9 @@
-const http = require('http')
-const path = require('path');
 const express = require('express');
+const app = express();
+const path = require('path');
+
 const {JsonDB} = require('node-json-db');
 const {Config} = require('node-json-db/dist/lib/JsonDBConfig');
-const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -16,6 +16,7 @@ let users = db.getData('/users');
 let regCode = db.getData('/reg_code');
 
 const nodemailer = require('nodemailer');
+const { createCipher } = require('crypto');
 
 let transporter = nodemailer.createTransport({ //Создание почтового бота
     service: 'gmail',
@@ -87,58 +88,100 @@ function updateREG_CODE(){ //удалить неактивные коды под
 
 setInterval(updateREG_CODE, 600000)
 
-const WebSocket = require('ws')
-const server = new WebSocket.Server({ port: 3000 })
+// socket
+
 let rooms = {}
-server.on('connection', function connection(ws, req){ // websocket
-    ws.on('message', function incoming(dataClient) {
-        let data = JSON.parse(dataClient)
-        if(data.newroom != undefined){
+var server = require('http').createServer();
+var io = require('socket.io')(server);
+
+io.sockets.on('connection', function(socket){
+    
+    socket.on('error', (err) => {
+        console.log(err)
+    });
+
+    socket.on('newroom', (data) => {
+        try{
             rooms[data.newroom] = {messages123456789: []}
+            console.log(rooms)
+        }catch(err){
+            console.log('newroom ', err)
         }
-        else if(data.newuser != undefined){
-            try{
-                let room = rooms[data.room]
-                room[data.newuser] =  ws
-                for(item in room.messages123456789){
-                    room[data.newuser].send(room.messages123456789[item].user + ': ' + room.messages123456789[item].message)
-                }
-            }catch(err){
-                console.log(err)
+    });
+
+    socket.on('newuser', (data) => {
+        try{
+            let room = rooms[data.room]
+            room[data.newuser] =  socket
+            for(item in room.messages123456789){
+                room[data.newuser].emit('message', {user: room.messages123456789[item].user, message: room.messages123456789[item].message, time: room.messages123456789[item].time.toString()})
             }
+            console.log(rooms)
+        }catch(err){
+            console.log('newuser ', err)
         }
-        else if(data.message != undefined){
-            try{
-                let room = rooms[data.room]
-                room.messages123456789.push({user: data.user, message: data.message})
-                for(key in room){
-                    if(key != 'messages123456789'){
-                        room[key].send(data.user + ': ' + data.message)
-                    }
+    });
+
+    socket.on('message', (data) => {
+        try{
+            let room = rooms[data.room]
+            let time = room.messages123456789.length + 1
+            room.messages123456789.push({user: data.user, message: data.message, time: time.toString()})
+            for(key in room){
+                if(key != 'messages123456789'){
+                    console.log(room.key)
+                    room[key].emit('message', {user: data.user, message: data.message, time: time.toString()})
                 }
-            }catch(err){
-                console.log(err)
             }
+            console.log(rooms[data.room].messages123456789)
+        }catch(err){
+            console.log('message', err)
         }
-        else if(data.deluser != undefined){
+    });
+    
+    socket.on('delroom', (data) => {
+        try{
+            delete rooms[data.delroom]
+            console.log(rooms)
+        }catch(err){
+            console.log('delroom ', err)
+        }
+    });
+
+    socket.on('deluser', (data) => {
+        try{
             let room = rooms[data.room]
             delete room[data.deluser]
+            console.log(rooms[data.room])
+        }catch(err){
+            console.log('deluser ', err)
         }
-        else if(data.delroom != undefined){
-            delete rooms[data.delroom]
-        }
-        else if(data.reconnect != undefined){
-            for(key in rooms){
-                let room = rooms[key]
-                for(keys in room){
-                    if(keys == data.reconnect){
-                        room[keys] = ws
-                    }
+    });
+
+    socket.on('recon', (data) => {
+        try{
+            console.log(data)
+            let room = rooms[data.room]
+            room[data.reconnect] = socket
+            let num = 0
+            for(item in room.messages123456789){
+                if(room.messages123456789[item].time == data.time){
+                    num = 1
+                    continue
+                }
+                if(num == 1){
+                    room[data.reconnect].emit('message', {user: room.messages123456789[item].user, message: room.messages123456789[item].message, time: room.messages123456789[item].time})
                 }
             }
+        }catch(err){
+            console.log('recon ', err)
         }
-    })
+    });
 })
+
+server.listen(3000, () => {
+    console.log('Server listening at port 3000');
+});
 
 app.listen(3030, function(){
     console.log('Express server listening on port 3030');
