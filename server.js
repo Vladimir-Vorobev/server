@@ -1,13 +1,7 @@
 const express = require('express');
 const app = express();
 const path = require('path');
-<<<<<<< HEAD
 const mongoose = require('mongoose')
-=======
-
-const {JsonDB} = require('node-json-db');
-const {Config} = require('node-json-db/dist/lib/JsonDBConfig');
->>>>>>> 36aa82c574e33c876d354a66977152e27f54a0d3
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -182,13 +176,6 @@ function updateREG_CODE(){ //удалить неактивные коды под
 
 setInterval(updateREG_CODE, 600000)
 
-<<<<<<< HEAD
-// начало кода для таймера
-
-// конец кода для таймера
-
-=======
->>>>>>> 36aa82c574e33c876d354a66977152e27f54a0d3
 // socket
 
 let rooms = {}
@@ -203,7 +190,6 @@ io.sockets.on('connection', function(socket){
 
     socket.on('newroom', (data) => {
         try{
-<<<<<<< HEAD
             rooms[data.newroom] = {messages123456789: [], settings123456789: {min_people: data.min_people, max_people: data.max_people, timerBegin: 30, timerDay: 60, timerNight: 60, gameOn: false, gameOver: false, timerStarted: false, 
             timer(settings, settingsTimer, room, stop){
                 let tim
@@ -315,63 +301,6 @@ io.sockets.on('connection', function(socket){
             console.log('deluser ', err)
         }
     });
-=======
-            rooms[data.newroom] = {messages123456789: []}
-            console.log(rooms)
-        }catch(err){
-            console.log('newroom ', err)
-        }
-    });
-
-    socket.on('newuser', (data) => {
-        try{
-            let room = rooms[data.room]
-            room[data.newuser] =  socket
-            for(item in room.messages123456789){
-                room[data.newuser].emit('message', {user: room.messages123456789[item].user, message: room.messages123456789[item].message, time: room.messages123456789[item].time.toString()})
-            }
-            console.log(rooms)
-        }catch(err){
-            console.log('newuser ', err)
-        }
-    });
-
-    socket.on('message', (data) => {
-        try{
-            let room = rooms[data.room]
-            let time = room.messages123456789.length + 1
-            room.messages123456789.push({user: data.user, message: data.message, time: time.toString()})
-            for(key in room){
-                if(key != 'messages123456789'){
-                    console.log(room.key)
-                    room[key].emit('message', {user: data.user, message: data.message, time: time.toString()})
-                }
-            }
-            console.log(rooms[data.room].messages123456789)
-        }catch(err){
-            console.log('message', err)
-        }
-    });
-    
-    socket.on('delroom', (data) => {
-        try{
-            delete rooms[data.delroom]
-            console.log(rooms)
-        }catch(err){
-            console.log('delroom ', err)
-        }
-    });
-
-    socket.on('deluser', (data) => {
-        try{
-            let room = rooms[data.room]
-            delete room[data.deluser]
-            console.log(rooms[data.room])
-        }catch(err){
-            console.log('deluser ', err)
-        }
-    });
->>>>>>> 36aa82c574e33c876d354a66977152e27f54a0d3
 
     socket.on('recon', (data) => {
         try{
@@ -413,14 +342,4 @@ async function start(){
     }
 }
 
-<<<<<<< HEAD
 start()
-=======
-server.listen(3000, () => {
-    console.log('Server listening at port 3000');
-});
-
-app.listen(3030, function(){
-    console.log('Express server listening on port 3030');
-});
->>>>>>> 36aa82c574e33c876d354a66977152e27f54a0d3
