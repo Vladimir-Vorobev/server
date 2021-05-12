@@ -15,7 +15,7 @@
     "express": "^4.17.1",
     "mongodb": "^3.5.8",
     "mongoose": "^5.9.20",
-    "nodemailer": "^6.4.8",
+    "nodemailer": "^6.4.16",
     "path": "^0.12.7",
     "socket.io": "^2.3.0",
     "ws": "^7.3.1"
